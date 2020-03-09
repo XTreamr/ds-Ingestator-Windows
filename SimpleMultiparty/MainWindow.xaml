@@ -8,9 +8,8 @@
         mc:Ignorable="d"
         Title="Simple Multiparty" Height="350" Width="525" MinWidth="320" MinHeight="240">
   <Grid>
-    <UniformGrid x:Name="SubscriberGrid" Rows="1" Columns="0">
-    </UniformGrid>
-    <OpenTok:VideoRenderer x:Name="PublisherVideo" HorizontalAlignment="Right" Height="114" VerticalAlignment="Bottom" Width="184" Margin="0,0,10.429,10.143" BorderBrush="#FF5B1919" BorderThickness="1" >
+    <UniformGrid x:Name="SubscriberGrid" Rows="1" Columns="0"/>
+        <OpenTok:VideoRenderer x:Name="PublisherVideo_1" HorizontalAlignment="Right" Height="114" VerticalAlignment="Bottom" Width="184" Margin="0,0,10,195" BorderBrush="#FF5B1919" BorderThickness="1" >
       <OpenTok:VideoRenderer.Effect>
         <DropShadowEffect Opacity="0.6"/>
       </OpenTok:VideoRenderer.Effect>
@@ -19,8 +18,26 @@
         </ImageBrush>
       </OpenTok:VideoRenderer.Background>
     </OpenTok:VideoRenderer>
-    <Grid HorizontalAlignment="Left" Height="100" VerticalAlignment="Top" Width="100">
-      <Button x:Name="ConnectDisconnectButton" Content="Connect" HorizontalAlignment="Left" Margin="10,10,0,70" Width="80" Click="Connect_Click"/>
+    <Grid HorizontalAlignment="Left" Height="140" VerticalAlignment="Top" Width="253">
+      <Button x:Name="ConnectDisconnectButton" Content="Connect" HorizontalAlignment="Left" Margin="10,10,0,104" Width="80" Click="Connect_Click"/>
+            <Button x:Name="AddPublisherButton" Content="add publisher" HorizontalAlignment="Left" Margin="10,41,0,73" Width="80" Click="Publish_Click"/>
+            <ComboBox x:Name="WebcamSelector" HorizontalAlignment="Left" Margin="104,41,0,0" VerticalAlignment="Top" Width="120"/>
         </Grid>
-  </Grid>
+        <OpenTok:VideoRenderer x:Name="PublisherVideo_2" HorizontalAlignment="Right" Height="114" VerticalAlignment="Bottom" Width="184" Margin="0,0,10,10" BorderBrush="#FF5B1919" BorderThickness="1" >
+            <OpenTok:VideoRenderer.Effect>
+                <DropShadowEffect Opacity="0.6"/>
+            </OpenTok:VideoRenderer.Effect>
+            <OpenTok:VideoRenderer.Background>
+                <ImageBrush Stretch="UniformToFill"/>
+            </OpenTok:VideoRenderer.Background>
+        </OpenTok:VideoRenderer>
+        <OpenTok:VideoRenderer x:Name="PublisherVideo_3" HorizontalAlignment="Right" Height="114" VerticalAlignment="Bottom" Width="184" Margin="0,0,264,10" BorderBrush="#FF5B1919" BorderThickness="1" >
+            <OpenTok:VideoRenderer.Effect>
+                <DropShadowEffect Opacity="0.6"/>
+            </OpenTok:VideoRenderer.Effect>
+            <OpenTok:VideoRenderer.Background>
+                <ImageBrush Stretch="UniformToFill"/>
+            </OpenTok:VideoRenderer.Background>
+        </OpenTok:VideoRenderer>
+    </Grid>
 </Window>
