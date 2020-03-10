@@ -1,8 +1,57 @@
-﻿using OpenTok;
+﻿using Newtonsoft.Json;
+using OpenTok;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows;
+
+namespace HttpRequest {
+    public class RequestSession {
+        public TokboxSession tokbox { get; set; }
+        public TokboxSession tokboxUDP { get; set; }
+    }
+
+    public class TokboxSession {
+        public string sessionId { get; set; }
+        public string token { get; set; }
+        public string apiKey { get; set; }
+    }
+
+    class ApiRequest {
+        
+        public static async Task<RequestSession> GetTokboxSession(string path)
+        {
+            var hardcoded = "https://api.dev.dstudio.live/xtreamr/v2/public/xtreams/75a8c3a";
+            Trace.WriteLine("HAcer request!!"+path);
+            Trace.WriteLine("HAcer -------!!" + hardcoded);
+
+            var client = new RestClient(path);
+            client.Timeout = -1;
+            RequestSession session = null;
+            var request = new RestRequest(Method.GET);
+            IRestResponse response = client.Execute(request);
+            if (response.IsSuccessful) { 
+            /*   HttpClient client = new HttpClient();
+               HttpResponseMessage response = await client.GetAsync(path);
+               Trace.WriteLine("primer await");
+
+               if (response.IsSuccessStatusCode)
+               {
+                   Trace.WriteLine("segundo await");
+                   var stringResult = await response.Content.ReadAsStringAsync();*/
+            Trace.WriteLine("--->>>" + response.Content);
+                session = JsonConvert.DeserializeObject<RequestSession>(response.Content);
+            }
+            else {
+                Trace.WriteLine("Error con peticion!" + response.StatusCode);
+            }
+            return session;
+        }
+    }
+}
 
 namespace SimpleMultiparty
 {
@@ -11,27 +60,30 @@ namespace SimpleMultiparty
     /// </summary>
     public partial class MainWindow : Window
     {
-        public const string API_KEY = "46464702";
-        //TCP
-         public const string SESSION_ID = "1_MX40NjQ2NDcwMn5-MTU4Mzc3NDY5MTU4NH5pMXRqcXNkYlM5NVVGb1NIK1Y2QUdDMmR-fg";
-        public const string TOKEN = "T1==cGFydG5lcl9pZD00NjQ2NDcwMiZzaWc9MjQyY2NmNmYyMDBjMzBiZGEzNThlN2Q2MWNjMTU4YWUzYTM5NDRhYjpzZXNzaW9uX2lkPTFfTVg0ME5qUTJORGN3TW41LU1UVTRNemMzTkRZNU1UVTROSDVwTVhScWNYTmtZbE01TlZWR2IxTklLMVkyUVVkRE1tUi1mZyZjcmVhdGVfdGltZT0xNTgzNzc0Nzk5Jm5vbmNlPTAuMDI3NjI1MDUzMDYyOTk0ODk4JnJvbGU9cHVibGlzaGVyJmV4cGlyZV90aW1lPTE1ODQzNzk1OTkmY29ubmVjdGlvbl9kYXRhPXh0cmVhbXJVc2VySWQlM0QwJmluaXRpYWxfbGF5b3V0X2NsYXNzX2xpc3Q9";
-            //UDP
-            //  public const string SESSION_ID = "1_MX40NjI3MDc3Mn5-MTU4Mzc1NDQ5Mjg0OH5tVUJaUXdIdWNjejZNeUpBSllseVY1NUN-UH4";
-            //  public const string TOKEN = "T1==cGFydG5lcl9pZD00NjI3MDc3MiZzaWc9Y2IwNGMwMjY2NDc4MGQwNDA4MzI0NTBjOGQyZTlhNTE1NTAzMzU4NTpzZXNzaW9uX2lkPTFfTVg0ME5qSTNNRGMzTW41LU1UVTRNemMxTkRRNU1qZzBPSDV0VlVKYVVYZElkV05qZWpaTmVVcEJTbGxzZVZZMU5VTi1VSDQmY3JlYXRlX3RpbWU9MTU4Mzc1ODE2MyZub25jZT0wLjgxMzcyMzg2Njk2ODI4MDcmcm9sZT1wdWJsaXNoZXImZXhwaXJlX3RpbWU9MTU4NDM2Mjk2MyZjb25uZWN0aW9uX2RhdGE9eHRyZWFtclVzZXJJZCUzRDAmaW5pdGlhbF9sYXlvdXRfY2xhc3NfbGlzdD0=";
 
         Session Session;
         Session UDPSession;
+
+
+        HttpRequest.RequestSession ReceivedSession;
+        String[] Urls = new String[3] { "https://api.dstudio.live/xtreamr/v2/public/xtreams/",
+            "https://api.pre.dstudio.live/xtreamr/v2/public/xtreams/",
+            "https://api.dev.dstudio.live/xtreamr/v2/public/xtreams/" };
+
         IList<VideoCapturer.VideoDevice> devices;
         List<Publisher> Publisers = new List<Publisher>();
         List<VideoCapturer> Capturers = new List<VideoCapturer>();
 
+        int ActualPublisherAvailable = 0;
         //   Publisher Publisher;
         bool Disconnect = false;
         Dictionary<Stream, Subscriber> SubscriberByStream = new Dictionary<Stream, Subscriber>();
 
         public MainWindow()
         {
+            //TODO aniadir llamada rest para obtener los datos de la sesion
             InitializeComponent();
+            InitViews();
             devices = VideoCapturer.EnumerateDevices();
             FillSelectorWithWebCams();
             AddPublisherButton.IsEnabled = false;
@@ -39,59 +91,103 @@ namespace SimpleMultiparty
             // Please note that the PublisherVideo component is added in the xaml file
            // Publisher = new Publisher(Context.Instance, renderer: PublisherVideo, capturer: Capturer, name: "CAMERA");
 
-            if (API_KEY == "" || SESSION_ID == "" || TOKEN == "")
-            {
-                MessageBox.Show("Please fill out the API_KEY, SESSION_ID and TOKEN variables in the source code " +
-                    "in order to connect to the session", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                ConnectDisconnectButton.IsEnabled = false;
-            }
-            else
-            {
-                Session = new Session(Context.Instance, API_KEY, SESSION_ID);
-
-                Session.Connected += Session_Connected;
-                Session.Disconnected += Session_Disconnected;
-                Session.Error += Session_Error;
-                Session.StreamReceived += Session_StreamReceived;
-                Session.StreamDropped += Session_StreamDropped;
-            }
-
             Closing += MainWindow_Closing;
         }
 
+        private void InitViews() {
+            EnvSelector.Items.Add("PRO");
+            EnvSelector.Items.Add("PRE");
+            EnvSelector.Items.Add("DEV");
+            EnvSelector.SelectedIndex = 2;
+            IdTextBox.Text = "75a8c3a";
+            ConnectDisconnectButton.IsEnabled = false;
+            StatusText.Content = "Introduzca Id y dele a obtener sesión";
+        }
 
         private void FillSelectorWithWebCams()
         {
             foreach (VideoCapturer.VideoDevice device in devices) {
                 WebcamSelector.Items.Add(device.Name);
             }
+            WebcamSelector.SelectedIndex = 1;
+        }
+
+        private async void Session_Click(object sender, RoutedEventArgs e)
+        {
+            string SessionCode = IdTextBox.Text;
+            var BaseUrl = Urls[EnvSelector.SelectedIndex] + SessionCode;
+
+
+            ReceivedSession =await HttpRequest.ApiRequest.GetTokboxSession(BaseUrl);
+            ConnectDisconnectButton.IsEnabled = true;
+            if (ReceivedSession?.tokboxUDP != null) {
+                SetStatus("Sesion recibida con UDP");
+            }
+            else {
+                if (ReceivedSession?.tokbox != null)
+                {
+                    SetStatus("Sesion recibida sencilla");
+                }
+                else {
+                    ConnectDisconnectButton.IsEnabled = false;
+                    SetStatus("Sesion invalida, intentelo de nuevo");
+                    return;
+                }
+            }
            
+            Session = new Session(Context.Instance, ReceivedSession.tokbox.apiKey, ReceivedSession.tokbox.sessionId);
+
+            Session.Connected += Session_Connected;
+            Session.Disconnected += Session_Disconnected;
+            Session.Error += Session_Error;
+            Session.StreamReceived += Session_StreamReceived;
+            Session.StreamDropped += Session_StreamDropped;
+            
+            if (ReceivedSession.tokboxUDP != null) {
+                UDPSession = new Session(Context.Instance, ReceivedSession.tokboxUDP.apiKey, ReceivedSession.tokboxUDP.sessionId);
+
+                UDPSession.Connected += Session_Connected;
+                UDPSession.Disconnected += Session_Disconnected;
+                UDPSession.Error += Session_Error;
+                UDPSession.StreamReceived += Session_StreamReceived;
+                UDPSession.StreamDropped += Session_StreamDropped;
+            }
+           
+
+        }
+
+        private void SetStatus(string Status) {
+            StatusText.Content = Status;
         }
 
         private void Publish_Click(object sender, RoutedEventArgs e)
         {
             int position = WebcamSelector.SelectedIndex;
-
-            var Capturer = devices[position].CreateVideoCapturer(VideoCapturer.Resolution.High);
-
-            var publisherRenderer = PublisherVideo_1;
-            switch (Publisers.Count) {
-                case 0:
-                    publisherRenderer = PublisherVideo_1;
-                    break;
-                case 1:
-                    publisherRenderer = PublisherVideo_2;
-                    break;
-                default:
-                    publisherRenderer = PublisherVideo_3;
-                    break;
+            if (UDPSession != null) {
+                var CapturerUDP = devices[position].CreateVideoCapturer(VideoCapturer.Resolution.High);
+                var PublisherUDP = new Publisher(Context.Instance,  capturer: CapturerUDP, name: "CAMERA");
+                Publisers.Add(PublisherUDP);
+                Capturers.Add(CapturerUDP);
+                UDPSession.Publish(PublisherUDP);
             }
-
-            var Publisher = new Publisher(Context.Instance, renderer: publisherRenderer, capturer: Capturer,name:"CAMERA");
+            var Capturer = devices[position].CreateVideoCapturer(VideoCapturer.Resolution.High);
+            var Publisher = new Publisher(Context.Instance, renderer: GetNextPublisherView(), capturer: Capturer, name: "CAMERA");
             Publisers.Add(Publisher);
             Capturers.Add(Capturer);
 
             Session.Publish(Publisher);
+        }
+
+        private VideoRenderer GetNextPublisherView() {
+            ActualPublisherAvailable += 1;
+            switch (ActualPublisherAvailable) {
+                case 1:
+                    return PublisherVideo_1;
+                case 2:
+                    return PublisherVideo_2;
+                default:
+                    return PublisherVideo_3;
+            }
         }
 
         private void UnSuscribeAll() {
@@ -115,6 +211,10 @@ namespace SimpleMultiparty
             }
             UnSuscribeAll();
             Session?.Dispose();
+            if (UDPSession != null)
+            {
+                UDPSession?.Dispose();
+            }
         }
 
         private void Session_Connected(object sender, EventArgs e)
@@ -163,6 +263,9 @@ namespace SimpleMultiparty
             try
             {
                 Session.Subscribe(subscriber);
+                if (UDPSession != null) {
+                    UDPSession.Subscribe(subscriber);
+                }
             }
             catch (OpenTokException ex)
             {
@@ -180,6 +283,10 @@ namespace SimpleMultiparty
                 try
                 {
                     Session.Unsubscribe(subscriber);
+                    if (UDPSession != null)
+                    {
+                        UDPSession.Unsubscribe(subscriber);
+                    }
                 }
                 catch (OpenTokException ex)
                 {
@@ -195,6 +302,10 @@ namespace SimpleMultiparty
             foreach (var myPublisers in Publisers)
             {
                 Session.Unpublish(myPublisers);
+                if (UDPSession != null)
+                {
+                    UDPSession.Unpublish(myPublisers);
+                }
             }
         }
 
@@ -209,6 +320,10 @@ namespace SimpleMultiparty
                     //     Session.Disconnect();
                     UnSuscribeAll();
                     Session?.Dispose();
+                    if (UDPSession != null)
+                    {
+                        UDPSession?.Dispose();
+                    }
                 }
                 catch (OpenTokException ex)
                 {
@@ -220,7 +335,11 @@ namespace SimpleMultiparty
                 Trace.WriteLine("Connecting session");
                 try
                 {
-                    Session.Connect(TOKEN);
+                    Session.Connect(ReceivedSession.tokbox.token);
+                    if (UDPSession != null)
+                    {
+                        UDPSession?.Connect(ReceivedSession.tokboxUDP.token);
+                    }
                 }
                 catch (OpenTokException ex)
                 {
