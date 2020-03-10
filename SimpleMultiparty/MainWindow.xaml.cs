@@ -101,6 +101,8 @@ namespace SimpleMultiparty
             EnvSelector.SelectedIndex = 2;
             IdTextBox.Text = "75a8c3a";
             ConnectDisconnectButton.IsEnabled = false;
+            ConnectDisconnectNoUDPButton.IsEnabled = false;
+
             StatusText.Content = "Introduzca Id y dele a obtener sesión";
         }
 
@@ -142,7 +144,7 @@ namespace SimpleMultiparty
             Session.Error += Session_Error;
             Session.StreamReceived += Session_StreamReceived;
             Session.StreamDropped += Session_StreamDropped;
-            
+            ConnectDisconnectNoUDPButton.IsEnabled = false;
             if (ReceivedSession.tokboxUDP != null) {
                 UDPSession = new Session(Context.Instance, ReceivedSession.tokboxUDP.apiKey, ReceivedSession.tokboxUDP.sessionId);
 
@@ -151,8 +153,9 @@ namespace SimpleMultiparty
                 UDPSession.Error += Session_Error;
                 UDPSession.StreamReceived += Session_StreamReceived;
                 UDPSession.StreamDropped += Session_StreamDropped;
+                ConnectDisconnectNoUDPButton.IsEnabled = true;
             }
-           
+
 
         }
 
@@ -309,8 +312,20 @@ namespace SimpleMultiparty
             }
         }
 
+
+        private void Connect_NOUDP_Click(object sender, RoutedEventArgs e)
+        {
+            Connect(false);
+        }
+
         private void Connect_Click(object sender, RoutedEventArgs e)
         {
+            Connect(true);
+
+        }
+
+        private void Connect(Boolean withUDP) {
+
             if (Disconnect)
             {
                 Trace.WriteLine("Disconnecting session");
@@ -320,7 +335,7 @@ namespace SimpleMultiparty
                     //     Session.Disconnect();
                     UnSuscribeAll();
                     Session?.Dispose();
-                    if (UDPSession != null)
+                    if ((UDPSession != null)&&(withUDP))
                     {
                         UDPSession?.Dispose();
                     }
@@ -336,7 +351,7 @@ namespace SimpleMultiparty
                 try
                 {
                     Session.Connect(ReceivedSession.tokbox.token);
-                    if (UDPSession != null)
+                    if ((UDPSession != null)&&(withUDP))
                     {
                         UDPSession?.Connect(ReceivedSession.tokboxUDP.token);
                     }
@@ -347,7 +362,9 @@ namespace SimpleMultiparty
                 }
             }
             Disconnect = !Disconnect;
-            ConnectDisconnectButton.Content = Disconnect ? "Disconnect" : "Connect";
+            ConnectDisconnectButton.Content = Disconnect ? "Desconectar" : "Connectar";
+            ConnectDisconnectNoUDPButton.Content = Disconnect ? "Desconectar" : "Connectar con UDP";
         }
+
     }
 }
