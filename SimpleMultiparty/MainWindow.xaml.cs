@@ -28,9 +28,7 @@ namespace DSIngestator
         List<VideoCapturer> Capturers = new List<VideoCapturer>();
 
         int ActualPublisherAvailable = 0;
-        //   Publisher Publisher;
         bool Disconnect = false;
-        Dictionary<Stream, Subscriber> SubscriberByStream = new Dictionary<Stream, Subscriber>();
 
         public MainWindow()
         {
@@ -39,9 +37,6 @@ namespace DSIngestator
             devices = VideoCapturer.EnumerateDevices();
             FillSelectorWithWebCams();
             AddPublisherButton.IsEnabled = false;
-            // We create the publisher here to show the preview when application starts
-            // Please note that the PublisherVideo component is added in the xaml file
-           // Publisher = new Publisher(Context.Instance, renderer: PublisherVideo, capturer: Capturer, name: "CAMERA");
 
             Closing += MainWindow_Closing;
         }
@@ -162,10 +157,6 @@ namespace DSIngestator
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            foreach (var subscriber in SubscriberByStream.Values)
-            {
-                subscriber.Dispose();
-            }
             UnSuscribeAll();
             Session?.Dispose();
             if (UDPSession != null)
@@ -190,7 +181,6 @@ namespace DSIngestator
         {
             Trace.WriteLine("Session disconnected");
             AddPublisherButton.IsEnabled = false;
-            SubscriberByStream.Clear();
             SubscriberGrid.Children.Clear();
         }
 
@@ -206,92 +196,6 @@ namespace DSIngestator
             int cols = rows == 0 ? 0 : Convert.ToInt32(Math.Ceiling(((double)numberOfSubscribers) / rows));
             SubscriberGrid.Columns = cols;
             SubscriberGrid.Rows = rows;
-        }
-
-
-
-        private void UDPSession_StreamReceived(object sender, Session.StreamEventArgs e)
-        {
-            Trace.WriteLine("Session stream received");
-
-            VideoRenderer renderer = new VideoRenderer();
-            SubscriberGrid.Children.Add(renderer);
-            UpdateGridSize(SubscriberGrid.Children.Count);
-            Subscriber subscriber = new Subscriber(Context.Instance, e.Stream, renderer);
-            SubscriberByStream.Add(e.Stream, subscriber);
-
-            try
-            {
-                UDPSession.Subscribe(subscriber);
-            }
-            catch (OpenTokException ex)
-            {
-                Trace.WriteLine("OpenTokException " + ex.ToString());
-            }
-        }
-        private void Session_StreamReceived(object sender, Session.StreamEventArgs e)
-        {
-            Trace.WriteLine("Session stream received");
-
-            VideoRenderer renderer = new VideoRenderer();
-            SubscriberGrid.Children.Add(renderer);
-            UpdateGridSize(SubscriberGrid.Children.Count);
-            Subscriber subscriber = new Subscriber(Context.Instance, e.Stream, renderer);
-            SubscriberByStream.Add(e.Stream, subscriber);
-
-            try
-            {
-                Session.Subscribe(subscriber);
-                if (UDPSession != null) {
-                    UDPSession.Subscribe(subscriber);
-                }
-            }
-            catch (OpenTokException ex)
-            {
-                Trace.WriteLine("OpenTokException " + ex.ToString());
-            }
-        }
-
-
-        private void UDPSession_StreamDropped(object sender, Session.StreamEventArgs e)
-        {
-            Trace.WriteLine("Session stream dropped");
-            var subscriber = SubscriberByStream[e.Stream];
-            if (subscriber != null)
-            {
-                SubscriberByStream.Remove(e.Stream);
-                try
-                {
-                    UDPSession.Unsubscribe(subscriber);
-                }
-                catch (OpenTokException ex)
-                {
-                    Trace.WriteLine("OpenTokException " + ex.ToString());
-                }
-
-                SubscriberGrid.Children.Remove((UIElement)subscriber.VideoRenderer);
-                UpdateGridSize(SubscriberGrid.Children.Count);
-            }
-        }
-        private void Session_StreamDropped(object sender, Session.StreamEventArgs e)
-        {
-            Trace.WriteLine("Session stream dropped");
-            var subscriber = SubscriberByStream[e.Stream];
-            if (subscriber != null)
-            {
-                SubscriberByStream.Remove(e.Stream);
-                try
-                {
-                    Session.Unsubscribe(subscriber);
-                }
-                catch (OpenTokException ex)
-                {
-                    Trace.WriteLine("OpenTokException " + ex.ToString());
-                }
-
-                SubscriberGrid.Children.Remove((UIElement)subscriber.VideoRenderer);
-                UpdateGridSize(SubscriberGrid.Children.Count);
-            }
         }
 
         private void UnpublishAll() {
@@ -336,21 +240,15 @@ namespace DSIngestator
         private void ConnectProcess(bool withUDP)
         {
             Session = new Session(Context.Instance, ReceivedSession.tokbox.apiKey, ReceivedSession.tokbox.sessionId);
-
             Session.Connected += Session_Connected;
             Session.Disconnected += Session_Disconnected;
             Session.Error += Session_Error;
-            //    Session.StreamReceived += Session_StreamReceived;
-            //    Session.StreamDropped += Session_StreamDropped;
             if ((ReceivedSession.tokboxUDP != null) && (withUDP == true))
             {
                 UDPSession = new Session(Context.Instance, ReceivedSession.tokboxUDP.apiKey, ReceivedSession.tokboxUDP.sessionId);
-
                 UDPSession.Connected += Session_Connected;
                 UDPSession.Disconnected += Session_Disconnected;
                 UDPSession.Error += Session_Error;
-                //       UDPSession.StreamReceived += UDPSession_StreamReceived;
-                //       UDPSession.StreamDropped += UDPSession_StreamDropped;
                 ConnectDisconnectNoUDPButton.IsEnabled = true;
             }
             Trace.WriteLine("Connecting session");
