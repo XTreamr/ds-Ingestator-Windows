@@ -2,12 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows;
 
 
 namespace DSIngestator
 {
+
     public partial class MainWindow : Window
     {
 
@@ -19,8 +21,11 @@ namespace DSIngestator
             "https://api.pre.dstudio.live/xtreamr/v2/public/xtreams/",
             "https://api.dev.dstudio.live/xtreamr/v2/public/xtreams/" };
 
+        Bitmap EmptyBitmap = CreateEmptyBitmap(114,184);
         IList<VideoCapturer.VideoDevice> devices;
         List<Publisher> Publisers = new List<Publisher>();
+        List<Publisher> UDPPublisers = new List<Publisher>();
+
         List<VideoCapturer> Capturers = new List<VideoCapturer>();
 
         int ActualPublisherAvailable = 0;
@@ -46,20 +51,28 @@ namespace DSIngestator
             EnvSelector.Items.Add("PRO");
             EnvSelector.Items.Add("PRE");
             EnvSelector.Items.Add("DEV");
-            EnvSelector.SelectedIndex = 2;
-            IdTextBox.Text = "75a8c3a";
+            EnvSelector.SelectedIndex = 1;
+            IdTextBox.Text = "089ef02";
             ConnectDisconnectButton.IsEnabled = false;
             ConnectDisconnectNoUDPButton.IsEnabled = false;
-
+            SetDefaultsImages();
             StatusText.Content = "Introduzca Id y dele a obtener sesión";
+        }
+
+        private void SetDefaultsImages() {
+            PublisherVideo_1.RenderFrame(VideoFrame.CreateYuv420pFrameFromBitmap(EmptyBitmap));
+            PublisherVideo_2.RenderFrame(VideoFrame.CreateYuv420pFrameFromBitmap(EmptyBitmap));
+            PublisherVideo_3.RenderFrame(VideoFrame.CreateYuv420pFrameFromBitmap(EmptyBitmap));
         }
 
         private void FillSelectorWithWebCams()
         {
             foreach (VideoCapturer.VideoDevice device in devices) {
                 WebcamSelector.Items.Add(device.Name);
+                Capturers.Add(null);
+
             }
-            WebcamSelector.SelectedIndex = 1;
+            WebcamSelector.SelectedIndex = 0;
         }
 
         private async void Session_Click(object sender, RoutedEventArgs e)
@@ -68,7 +81,12 @@ namespace DSIngestator
             var BaseUrl = Urls[EnvSelector.SelectedIndex] + SessionCode;
 
             ReceivedSession =await HttpRequest.ApiRequest.GetTokboxSession(BaseUrl);
-            ConnectDisconnectButton.IsEnabled = true;
+            if (ReceivedSession.tokboxUDP != null) {
+                ConnectDisconnectButton.IsEnabled = true;
+              
+            }
+            ConnectDisconnectNoUDPButton.IsEnabled = true;
+
             if (ReceivedSession?.tokboxUDP != null) {
                 SetStatus("Sesion recibida con UDP");
             }
@@ -83,46 +101,30 @@ namespace DSIngestator
                     return;
                 }
             }
-           
-            Session = new Session(Context.Instance, ReceivedSession.tokbox.apiKey, ReceivedSession.tokbox.sessionId);
-
-            Session.Connected += Session_Connected;
-            Session.Disconnected += Session_Disconnected;
-            Session.Error += Session_Error;
-            Session.StreamReceived += Session_StreamReceived;
-            Session.StreamDropped += Session_StreamDropped;
-            ConnectDisconnectNoUDPButton.IsEnabled = false;
-            if (ReceivedSession.tokboxUDP != null) {
-                UDPSession = new Session(Context.Instance, ReceivedSession.tokboxUDP.apiKey, ReceivedSession.tokboxUDP.sessionId);
-
-                UDPSession.Connected += Session_Connected;
-                UDPSession.Disconnected += Session_Disconnected;
-                UDPSession.Error += Session_Error;
-                UDPSession.StreamReceived += Session_StreamReceived;
-                UDPSession.StreamDropped += Session_StreamDropped;
-                ConnectDisconnectNoUDPButton.IsEnabled = true;
-            }
         }
 
         private void SetStatus(string Status) {
             StatusText.Content = Status;
         }
 
+        private VideoCapturer GetCapturer(int position) {
+            if (Capturers[position] == null) {
+                Capturers[position] = devices[position].CreateVideoCapturer(VideoCapturer.Resolution.High);
+            }
+            return Capturers[position];
+        }
+
         private void Publish_Click(object sender, RoutedEventArgs e)
         {
             int position = WebcamSelector.SelectedIndex;
+            var Capturer = GetCapturer(position);
             if (UDPSession != null) {
-                var CapturerUDP = devices[position].CreateVideoCapturer(VideoCapturer.Resolution.High);
-                var PublisherUDP = new Publisher(Context.Instance,  capturer: CapturerUDP, name: "CAMERA");
-                Publisers.Add(PublisherUDP);
-                Capturers.Add(CapturerUDP);
+                var PublisherUDP = new Publisher(Context.Instance,  capturer: Capturer, name: "CAMERA");
+                UDPPublisers.Add(PublisherUDP);
                 UDPSession.Publish(PublisherUDP);
             }
-            var Capturer = devices[position].CreateVideoCapturer(VideoCapturer.Resolution.High);
             var Publisher = new Publisher(Context.Instance, renderer: GetNextPublisherView(), capturer: Capturer, name: "CAMERA");
             Publisers.Add(Publisher);
-            Capturers.Add(Capturer);
-
             Session.Publish(Publisher);
         }
 
@@ -143,12 +145,19 @@ namespace DSIngestator
             {
                 myPublisers?.Dispose();
             }
+            foreach (var myPublisers in UDPPublisers)
+            {
+                myPublisers?.Dispose();
+            }
+            UDPPublisers.Clear();
             Publisers.Clear();
             foreach (var myCapturers in Capturers)
             {
                 myCapturers?.Dispose();
             }
-            Capturers.Clear();
+            for (int i = 0; i < Capturers.Count;i++) {
+                Capturers[i] = null;
+            }
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -180,6 +189,7 @@ namespace DSIngestator
         private void Session_Disconnected(object sender, EventArgs e)
         {
             Trace.WriteLine("Session disconnected");
+            AddPublisherButton.IsEnabled = false;
             SubscriberByStream.Clear();
             SubscriberGrid.Children.Clear();
         }
@@ -198,6 +208,27 @@ namespace DSIngestator
             SubscriberGrid.Rows = rows;
         }
 
+
+
+        private void UDPSession_StreamReceived(object sender, Session.StreamEventArgs e)
+        {
+            Trace.WriteLine("Session stream received");
+
+            VideoRenderer renderer = new VideoRenderer();
+            SubscriberGrid.Children.Add(renderer);
+            UpdateGridSize(SubscriberGrid.Children.Count);
+            Subscriber subscriber = new Subscriber(Context.Instance, e.Stream, renderer);
+            SubscriberByStream.Add(e.Stream, subscriber);
+
+            try
+            {
+                UDPSession.Subscribe(subscriber);
+            }
+            catch (OpenTokException ex)
+            {
+                Trace.WriteLine("OpenTokException " + ex.ToString());
+            }
+        }
         private void Session_StreamReceived(object sender, Session.StreamEventArgs e)
         {
             Trace.WriteLine("Session stream received");
@@ -221,6 +252,27 @@ namespace DSIngestator
             }
         }
 
+
+        private void UDPSession_StreamDropped(object sender, Session.StreamEventArgs e)
+        {
+            Trace.WriteLine("Session stream dropped");
+            var subscriber = SubscriberByStream[e.Stream];
+            if (subscriber != null)
+            {
+                SubscriberByStream.Remove(e.Stream);
+                try
+                {
+                    UDPSession.Unsubscribe(subscriber);
+                }
+                catch (OpenTokException ex)
+                {
+                    Trace.WriteLine("OpenTokException " + ex.ToString());
+                }
+
+                SubscriberGrid.Children.Remove((UIElement)subscriber.VideoRenderer);
+                UpdateGridSize(SubscriberGrid.Children.Count);
+            }
+        }
         private void Session_StreamDropped(object sender, Session.StreamEventArgs e)
         {
             Trace.WriteLine("Session stream dropped");
@@ -231,10 +283,6 @@ namespace DSIngestator
                 try
                 {
                     Session.Unsubscribe(subscriber);
-                    if (UDPSession != null)
-                    {
-                        UDPSession.Unsubscribe(subscriber);
-                    }
                 }
                 catch (OpenTokException ex)
                 {
@@ -250,10 +298,12 @@ namespace DSIngestator
             foreach (var myPublisers in Publisers)
             {
                 Session.Unpublish(myPublisers);
-                if (UDPSession != null)
-                {
-                    UDPSession.Unpublish(myPublisers);
-                }
+
+            }
+            foreach (var myPublisers in UDPPublisers)
+            {
+                UDPSession.Unpublish(myPublisers);
+
             }
         }
 
@@ -271,13 +321,34 @@ namespace DSIngestator
 
         private void Connect(Boolean withUDP) {
 
+            Session = new Session(Context.Instance, ReceivedSession.tokbox.apiKey, ReceivedSession.tokbox.sessionId);
+
+            Session.Connected += Session_Connected;
+            Session.Disconnected += Session_Disconnected;
+            Session.Error += Session_Error;
+        //    Session.StreamReceived += Session_StreamReceived;
+        //    Session.StreamDropped += Session_StreamDropped;
+            if ((ReceivedSession.tokboxUDP != null)&&(withUDP==true))
+            {
+                UDPSession = new Session(Context.Instance, ReceivedSession.tokboxUDP.apiKey, ReceivedSession.tokboxUDP.sessionId);
+
+                UDPSession.Connected += Session_Connected;
+                UDPSession.Disconnected += Session_Disconnected;
+                UDPSession.Error += Session_Error;
+         //       UDPSession.StreamReceived += UDPSession_StreamReceived;
+         //       UDPSession.StreamDropped += UDPSession_StreamDropped;
+                ConnectDisconnectNoUDPButton.IsEnabled = true;
+            }
+
+
             if (Disconnect)
             {
                 Trace.WriteLine("Disconnecting session");
+                ActualPublisherAvailable = 0;
+                AddPublisherButton.IsEnabled = false;
                 try
                 {
-                    //     UnpublishAll();
-                    //     Session.Disconnect();
+;
                     UnSuscribeAll();
                     Session?.Dispose();
                     if ((UDPSession != null)&&(withUDP))
@@ -289,6 +360,7 @@ namespace DSIngestator
                 {
                     Trace.WriteLine("OpenTokException " + ex.ToString());
                 }
+                SetDefaultsImages();
             }
             else
             {
@@ -308,8 +380,19 @@ namespace DSIngestator
             }
             Disconnect = !Disconnect;
             ConnectDisconnectButton.Content = Disconnect ? "Desconectar" : "Connectar";
-            ConnectDisconnectNoUDPButton.Content = Disconnect ? "Desconectar" : "Connectar con UDP";
+            ConnectDisconnectNoUDPButton.Content = Disconnect ? "Desconectar" : "Connectar SIN UDP";
         }
 
+
+        private static Bitmap CreateEmptyBitmap(int width, int height)
+        {
+            Bitmap bmp = new Bitmap(width, height);
+            using (Graphics graph = Graphics.FromImage(bmp))
+            {
+                Rectangle ImageSize = new Rectangle(0, 0, width, height);
+                graph.FillRectangle(Brushes.White, ImageSize);
+            }
+            return bmp;
+        }
     }
 }
