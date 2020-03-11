@@ -3,10 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:SimpleMultiparty"
-        xmlns:OpenTok="clr-namespace:OpenTok;assembly=WPFVideoRenderer" x:Class="SimpleMultiparty.MainWindow"
+        xmlns:local="clr-namespace:DSIngestator"
+        xmlns:OpenTok="clr-namespace:OpenTok;assembly=WPFVideoRenderer" x:Class="DSIngestator.MainWindow"
         mc:Ignorable="d"
-        Title="Simple Multiparty" Height="445" Width="525" MinWidth="320" MinHeight="240">
+        Title="DSIngestator" Height="445" Width="525" MinWidth="320" MinHeight="240">
     <Grid>
         <UniformGrid x:Name="SubscriberGrid" Rows="1" Columns="0"/>
         <OpenTok:VideoRenderer x:Name="PublisherVideo_1" HorizontalAlignment="Right" Height="114" VerticalAlignment="Bottom" Width="184" Margin="0,0,10,259" BorderBrush="#FF5B1919" BorderThickness="1" >

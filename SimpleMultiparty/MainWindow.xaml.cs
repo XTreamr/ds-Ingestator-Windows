@@ -53,7 +53,7 @@ namespace HttpRequest {
     }
 }
 
-namespace SimpleMultiparty
+namespace DSIngestator
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
