@@ -1,69 +1,18 @@
-﻿using Newtonsoft.Json;
-using OpenTok;
-using RestSharp;
+﻿using OpenTok;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace HttpRequest {
-    public class RequestSession {
-        public TokboxSession tokbox { get; set; }
-        public TokboxSession tokboxUDP { get; set; }
-    }
-
-    public class TokboxSession {
-        public string sessionId { get; set; }
-        public string token { get; set; }
-        public string apiKey { get; set; }
-    }
-
-    class ApiRequest {
-        
-        public static async Task<RequestSession> GetTokboxSession(string path)
-        {
-            var hardcoded = "https://api.dev.dstudio.live/xtreamr/v2/public/xtreams/75a8c3a";
-            Trace.WriteLine("HAcer request!!"+path);
-            Trace.WriteLine("HAcer -------!!" + hardcoded);
-
-            var client = new RestClient(path);
-            client.Timeout = -1;
-            RequestSession session = null;
-            var request = new RestRequest(Method.GET);
-            IRestResponse response = client.Execute(request);
-            if (response.IsSuccessful) { 
-            /*   HttpClient client = new HttpClient();
-               HttpResponseMessage response = await client.GetAsync(path);
-               Trace.WriteLine("primer await");
-
-               if (response.IsSuccessStatusCode)
-               {
-                   Trace.WriteLine("segundo await");
-                   var stringResult = await response.Content.ReadAsStringAsync();*/
-            Trace.WriteLine("--->>>" + response.Content);
-                session = JsonConvert.DeserializeObject<RequestSession>(response.Content);
-            }
-            else {
-                Trace.WriteLine("Error con peticion!" + response.StatusCode);
-            }
-            return session;
-        }
-    }
-}
 
 namespace DSIngestator
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
 
         Session Session;
         Session UDPSession;
-
 
         HttpRequest.RequestSession ReceivedSession;
         String[] Urls = new String[3] { "https://api.dstudio.live/xtreamr/v2/public/xtreams/",
@@ -81,7 +30,6 @@ namespace DSIngestator
 
         public MainWindow()
         {
-            //TODO aniadir llamada rest para obtener los datos de la sesion
             InitializeComponent();
             InitViews();
             devices = VideoCapturer.EnumerateDevices();
@@ -119,7 +67,6 @@ namespace DSIngestator
             string SessionCode = IdTextBox.Text;
             var BaseUrl = Urls[EnvSelector.SelectedIndex] + SessionCode;
 
-
             ReceivedSession =await HttpRequest.ApiRequest.GetTokboxSession(BaseUrl);
             ConnectDisconnectButton.IsEnabled = true;
             if (ReceivedSession?.tokboxUDP != null) {
@@ -155,8 +102,6 @@ namespace DSIngestator
                 UDPSession.StreamDropped += Session_StreamDropped;
                 ConnectDisconnectNoUDPButton.IsEnabled = true;
             }
-
-
         }
 
         private void SetStatus(string Status) {
