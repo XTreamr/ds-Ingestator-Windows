@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Threading.Tasks;
 using System.Windows;
 
 
@@ -77,26 +76,27 @@ namespace DSIngestator
 
         private async void Session_Click(object sender, RoutedEventArgs e)
         {
+            SetStatus("Obteniendo sesión, por favor, espere....");
             string SessionCode = IdTextBox.Text;
             var BaseUrl = Urls[EnvSelector.SelectedIndex] + SessionCode;
 
             ReceivedSession =await HttpRequest.ApiRequest.GetTokboxSession(BaseUrl);
-            if (ReceivedSession.tokboxUDP != null) {
-                ConnectDisconnectButton.IsEnabled = true;
-              
-            }
-            ConnectDisconnectNoUDPButton.IsEnabled = true;
 
             if (ReceivedSession?.tokboxUDP != null) {
                 SetStatus("Sesion recibida con UDP");
+                ConnectDisconnectButton.IsEnabled = true;
+                ConnectDisconnectNoUDPButton.IsEnabled = true;
             }
             else {
                 if (ReceivedSession?.tokbox != null)
                 {
+                    ConnectDisconnectButton.IsEnabled = false;
+                    ConnectDisconnectNoUDPButton.IsEnabled = true;
                     SetStatus("Sesion recibida sencilla");
                 }
                 else {
                     ConnectDisconnectButton.IsEnabled = false;
+                    ConnectDisconnectNoUDPButton.IsEnabled = false;
                     SetStatus("Sesion invalida, intentelo de nuevo");
                     return;
                 }
@@ -320,69 +320,79 @@ namespace DSIngestator
         }
 
         private void Connect(Boolean withUDP) {
-
-            Session = new Session(Context.Instance, ReceivedSession.tokbox.apiKey, ReceivedSession.tokbox.sessionId);
-
-            Session.Connected += Session_Connected;
-            Session.Disconnected += Session_Disconnected;
-            Session.Error += Session_Error;
-        //    Session.StreamReceived += Session_StreamReceived;
-        //    Session.StreamDropped += Session_StreamDropped;
-            if ((ReceivedSession.tokboxUDP != null)&&(withUDP==true))
-            {
-                UDPSession = new Session(Context.Instance, ReceivedSession.tokboxUDP.apiKey, ReceivedSession.tokboxUDP.sessionId);
-
-                UDPSession.Connected += Session_Connected;
-                UDPSession.Disconnected += Session_Disconnected;
-                UDPSession.Error += Session_Error;
-         //       UDPSession.StreamReceived += UDPSession_StreamReceived;
-         //       UDPSession.StreamDropped += UDPSession_StreamDropped;
-                ConnectDisconnectNoUDPButton.IsEnabled = true;
-            }
-
-
             if (Disconnect)
             {
-                Trace.WriteLine("Disconnecting session");
-                ActualPublisherAvailable = 0;
-                AddPublisherButton.IsEnabled = false;
-                try
-                {
-;
-                    UnSuscribeAll();
-                    Session?.Dispose();
-                    if ((UDPSession != null)&&(withUDP))
-                    {
-                        UDPSession?.Dispose();
-                    }
-                }
-                catch (OpenTokException ex)
-                {
-                    Trace.WriteLine("OpenTokException " + ex.ToString());
-                }
-                SetDefaultsImages();
+                DisconnectProcess(withUDP);
             }
             else
             {
-                Trace.WriteLine("Connecting session");
-                try
-                {
-                    Session.Connect(ReceivedSession.tokbox.token);
-                    if ((UDPSession != null)&&(withUDP))
-                    {
-                        UDPSession?.Connect(ReceivedSession.tokboxUDP.token);
-                    }
-                }
-                catch (OpenTokException ex)
-                {
-                    Trace.WriteLine("OpenTokException " + ex.ToString());
-                }
+                ConnectProcess(withUDP);
             }
             Disconnect = !Disconnect;
             ConnectDisconnectButton.Content = Disconnect ? "Desconectar" : "Connectar";
             ConnectDisconnectNoUDPButton.Content = Disconnect ? "Desconectar" : "Connectar SIN UDP";
         }
 
+        private void ConnectProcess(bool withUDP)
+        {
+            Session = new Session(Context.Instance, ReceivedSession.tokbox.apiKey, ReceivedSession.tokbox.sessionId);
+
+            Session.Connected += Session_Connected;
+            Session.Disconnected += Session_Disconnected;
+            Session.Error += Session_Error;
+            //    Session.StreamReceived += Session_StreamReceived;
+            //    Session.StreamDropped += Session_StreamDropped;
+            if ((ReceivedSession.tokboxUDP != null) && (withUDP == true))
+            {
+                UDPSession = new Session(Context.Instance, ReceivedSession.tokboxUDP.apiKey, ReceivedSession.tokboxUDP.sessionId);
+
+                UDPSession.Connected += Session_Connected;
+                UDPSession.Disconnected += Session_Disconnected;
+                UDPSession.Error += Session_Error;
+                //       UDPSession.StreamReceived += UDPSession_StreamReceived;
+                //       UDPSession.StreamDropped += UDPSession_StreamDropped;
+                ConnectDisconnectNoUDPButton.IsEnabled = true;
+            }
+            Trace.WriteLine("Connecting session");
+            try
+            {
+                Session.Connect(ReceivedSession.tokbox.token);
+                if ((UDPSession != null) && (withUDP))
+                {
+                    UDPSession?.Connect(ReceivedSession.tokboxUDP.token);
+                }
+            }
+            catch (OpenTokException ex)
+            {
+                Trace.WriteLine("OpenTokException " + ex.ToString());
+            }
+        }
+
+        private void DisconnectProcess(bool withUDP)
+        {
+            Trace.WriteLine("Disconnecting session");
+            ActualPublisherAvailable = 0;
+            AddPublisherButton.IsEnabled = false;
+            try
+            {
+                ;
+                UnSuscribeAll();
+                Session?.Dispose();
+                Session?.Disconnect();
+                Session = null;
+                if ((UDPSession != null) && (withUDP))
+                {
+                    UDPSession?.Dispose();
+                    UDPSession?.Disconnect();
+                    UDPSession = null;
+                }
+            }
+            catch (OpenTokException ex)
+            {
+                Trace.WriteLine("OpenTokException " + ex.ToString());
+            }
+            SetDefaultsImages();
+        }
 
         private static Bitmap CreateEmptyBitmap(int width, int height)
         {

@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using RestSharp;
 using System.Diagnostics;
+using System;
 
 namespace HttpRequest
 {
@@ -23,21 +24,28 @@ namespace HttpRequest
 
         public static async Task<RequestSession> GetTokboxSession(string path)
         {
-            var client = new RestClient(path);
-            client.Timeout = -1;
             RequestSession session = null;
-            var request = new RestRequest(Method.GET);
-            IRestResponse response = client.Execute(request);
-            if (response.IsSuccessful)
+            try
             {
-                Trace.WriteLine("--->>>" + response.Content);
-                session = JsonConvert.DeserializeObject<RequestSession>(response.Content);
+                var client = new RestClient(path);
+                client.Timeout = -1;
+                var request = new RestRequest(Method.GET);
+                IRestResponse response = client.Execute(request);
+                if (response.IsSuccessful)
+                {
+                    Trace.WriteLine("--->>>" + response.Content);
+                    session = JsonConvert.DeserializeObject<RequestSession>(response.Content);
+                }
+                else
+                {
+                    Trace.WriteLine("Error con peticion!" + response.StatusCode);
+                }
+                return session;
             }
-            else
+            catch (Exception ex)
             {
-                Trace.WriteLine("Error con peticion!" + response.StatusCode);
+                return session;
             }
-            return session;
         }
     }
 }
