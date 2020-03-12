@@ -6,20 +6,7 @@ using System;
 
 namespace HttpRequest
 {
-    public class RequestSession
-    {
-        public TokboxSession tokbox { get; set; }
-        public TokboxSession tokboxUDP { get; set; }
-    }
-
-    public class TokboxSession
-    {
-        public string sessionId { get; set; }
-        public string token { get; set; }
-        public string apiKey { get; set; }
-    }
-
-    class ApiRequest
+    class NetworkController
     {
 
         public static async Task<RequestSession> GetTokboxSession(string path)
@@ -27,10 +14,9 @@ namespace HttpRequest
             RequestSession session = null;
             try
             {
-                var client = new RestClient(path);
-                client.Timeout = -1;
-                var request = new RestRequest(Method.GET);
-                IRestResponse response = client.Execute(request);
+                RestClient client = new RestClient(path) { Timeout = -1 };
+                RestRequest request = new RestRequest(Method.GET);
+                IRestResponse response = await client.ExecuteAsync(request);
                 if (response.IsSuccessful)
                 {
                     Trace.WriteLine("--->>>" + response.Content);
@@ -44,8 +30,24 @@ namespace HttpRequest
             }
             catch (Exception ex)
             {
+                Trace.WriteLine("ERROR--->>>" + ex.ToString());
+
                 return session;
             }
         }
     }
+
+    public class RequestSession
+    {
+        public TokboxSession tokbox { get; set; }
+        public TokboxSession tokboxUDP { get; set; }
+    }
+
+    public class TokboxSession
+    {
+        public string sessionId { get; set; }
+        public string token { get; set; }
+        public string apiKey { get; set; }
+    }
+
 }

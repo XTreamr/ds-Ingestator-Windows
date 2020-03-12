@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows;
+using HttpRequest;
 
 
 namespace DSIngestator
@@ -12,15 +13,19 @@ namespace DSIngestator
     public partial class MainWindow : Window
     {
 
+        #region Variables
+
         Session Session;
         Session UDPSession;
 
         HttpRequest.RequestSession ReceivedSession;
-        String[] Urls = new String[3] { "https://api.dstudio.live/xtreamr/v2/public/xtreams/",
+        String[] Urls = new String[3] {
+            "https://api.dstudio.live/xtreamr/v2/public/xtreams/",
             "https://api.pre.dstudio.live/xtreamr/v2/public/xtreams/",
-            "https://api.dev.dstudio.live/xtreamr/v2/public/xtreams/" };
+            "https://api.dev.dstudio.live/xtreamr/v2/public/xtreams/"
+        };
 
-        Bitmap EmptyBitmap = CreateEmptyBitmap(114,184);
+        Bitmap EmptyBitmap = CreateEmptyBitmap(114, 184);
         IList<VideoCapturer.VideoDevice> devices;
         List<Publisher> Publisers = new List<Publisher>();
         List<Publisher> UDPPublisers = new List<Publisher>();
@@ -30,18 +35,23 @@ namespace DSIngestator
         int ActualPublisherAvailable = 0;
         bool Disconnect = false;
 
+        #endregion
+
+        #region Methods
+
         public MainWindow()
         {
             InitializeComponent();
             InitViews();
-            devices = VideoCapturer.EnumerateDevices();
             FillSelectorWithWebCams();
+
             AddPublisherButton.IsEnabled = false;
 
             Closing += MainWindow_Closing;
         }
 
-        private void InitViews() {
+        private void InitViews()
+        {
             EnvSelector.Items.Add("PRO");
             EnvSelector.Items.Add("PRE");
             EnvSelector.Items.Add("DEV");
@@ -53,7 +63,8 @@ namespace DSIngestator
             StatusText.Content = "Introduzca Id y dele a obtener sesión";
         }
 
-        private void SetDefaultsImages() {
+        private void SetDefaultsImages()
+        {
             PublisherVideo_1.RenderFrame(VideoFrame.CreateYuv420pFrameFromBitmap(EmptyBitmap));
             PublisherVideo_2.RenderFrame(VideoFrame.CreateYuv420pFrameFromBitmap(EmptyBitmap));
             PublisherVideo_3.RenderFrame(VideoFrame.CreateYuv420pFrameFromBitmap(EmptyBitmap));
@@ -61,7 +72,10 @@ namespace DSIngestator
 
         private void FillSelectorWithWebCams()
         {
-            foreach (VideoCapturer.VideoDevice device in devices) {
+            devices = VideoCapturer.EnumerateDevices();
+
+            foreach (VideoCapturer.VideoDevice device in devices)
+            {
                 WebcamSelector.Items.Add(device.Name);
                 Capturers.Add(null);
 
@@ -72,24 +86,28 @@ namespace DSIngestator
         private async void Session_Click(object sender, RoutedEventArgs e)
         {
             SetStatus("Obteniendo sesión, por favor, espere....");
+
             string SessionCode = IdTextBox.Text;
             var BaseUrl = Urls[EnvSelector.SelectedIndex] + SessionCode;
 
-            ReceivedSession =await HttpRequest.ApiRequest.GetTokboxSession(BaseUrl);
+            ReceivedSession = await NetworkController.GetTokboxSession(BaseUrl);
 
-            if (ReceivedSession?.tokboxUDP != null) {
+            if (ReceivedSession?.tokboxUDP != null)
+            {
                 SetStatus("Sesion recibida con UDP");
                 ConnectDisconnectButton.IsEnabled = true;
                 ConnectDisconnectNoUDPButton.IsEnabled = true;
             }
-            else {
+            else
+            {
                 if (ReceivedSession?.tokbox != null)
                 {
                     ConnectDisconnectButton.IsEnabled = false;
                     ConnectDisconnectNoUDPButton.IsEnabled = true;
                     SetStatus("Sesion recibida sencilla");
                 }
-                else {
+                else
+                {
                     ConnectDisconnectButton.IsEnabled = false;
                     ConnectDisconnectNoUDPButton.IsEnabled = false;
                     SetStatus("Sesion invalida, intentelo de nuevo");
@@ -98,12 +116,15 @@ namespace DSIngestator
             }
         }
 
-        private void SetStatus(string Status) {
+        private void SetStatus(string Status)
+        {
             StatusText.Content = Status;
         }
 
-        private VideoCapturer GetCapturer(int position) {
-            if (Capturers[position] == null) {
+        private VideoCapturer GetCapturer(int position)
+        {
+            if (Capturers[position] == null)
+            {
                 Capturers[position] = devices[position].CreateVideoCapturer(VideoCapturer.Resolution.High);
             }
             return Capturers[position];
@@ -113,8 +134,9 @@ namespace DSIngestator
         {
             int position = WebcamSelector.SelectedIndex;
             var Capturer = GetCapturer(position);
-            if (UDPSession != null) {
-                var PublisherUDP = new Publisher(Context.Instance,  capturer: Capturer, name: "CAMERA");
+            if (UDPSession != null)
+            {
+                var PublisherUDP = new Publisher(Context.Instance, capturer: Capturer, name: "CAMERA");
                 UDPPublisers.Add(PublisherUDP);
                 UDPSession.Publish(PublisherUDP);
             }
@@ -123,9 +145,11 @@ namespace DSIngestator
             Session.Publish(Publisher);
         }
 
-        private VideoRenderer GetNextPublisherView() {
+        private VideoRenderer GetNextPublisherView()
+        {
             ActualPublisherAvailable += 1;
-            switch (ActualPublisherAvailable) {
+            switch (ActualPublisherAvailable)
+            {
                 case 1:
                     return PublisherVideo_1;
                 case 2:
@@ -135,7 +159,8 @@ namespace DSIngestator
             }
         }
 
-        private void UnSuscribeAll() {
+        private void UnSuscribeAll()
+        {
             foreach (var myPublisers in Publisers)
             {
                 myPublisers?.Dispose();
@@ -150,7 +175,8 @@ namespace DSIngestator
             {
                 myCapturers?.Dispose();
             }
-            for (int i = 0; i < Capturers.Count;i++) {
+            for (int i = 0; i < Capturers.Count; i++)
+            {
                 Capturers[i] = null;
             }
         }
@@ -198,7 +224,8 @@ namespace DSIngestator
             SubscriberGrid.Rows = rows;
         }
 
-        private void UnpublishAll() {
+        private void UnpublishAll()
+        {
             foreach (var myPublisers in Publisers)
             {
                 Session.Unpublish(myPublisers);
@@ -211,7 +238,6 @@ namespace DSIngestator
             }
         }
 
-
         private void Connect_NOUDP_Click(object sender, RoutedEventArgs e)
         {
             Connect(false);
@@ -220,10 +246,10 @@ namespace DSIngestator
         private void Connect_Click(object sender, RoutedEventArgs e)
         {
             Connect(true);
-
         }
 
-        private void Connect(Boolean withUDP) {
+        private void Connect(Boolean withUDP)
+        {
             if (Disconnect)
             {
                 DisconnectProcess(withUDP);
@@ -302,5 +328,6 @@ namespace DSIngestator
             }
             return bmp;
         }
+        #endregion
     }
 }
