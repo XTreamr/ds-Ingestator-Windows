@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSIngestator", "DSIngestator.csproj", "{D1411016-039B-4490-AE40-59A2FB930A25}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "DSIngestator Installer", "..\DSIngestator Installer\DSIngestator Installer.vdproj", "{8B38D7AB-9F4D-467D-BBEC-91BDE7807E0B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,12 @@ Global
 		{D1411016-039B-4490-AE40-59A2FB930A25}.Release|x64.Build.0 = Release|x64
 		{D1411016-039B-4490-AE40-59A2FB930A25}.Release|x86.ActiveCfg = Release|x86
 		{D1411016-039B-4490-AE40-59A2FB930A25}.Release|x86.Build.0 = Release|x86
+		{8B38D7AB-9F4D-467D-BBEC-91BDE7807E0B}.Debug|Any CPU.ActiveCfg = Debug
+		{8B38D7AB-9F4D-467D-BBEC-91BDE7807E0B}.Debug|x64.ActiveCfg = Debug
+		{8B38D7AB-9F4D-467D-BBEC-91BDE7807E0B}.Debug|x86.ActiveCfg = Debug
+		{8B38D7AB-9F4D-467D-BBEC-91BDE7807E0B}.Release|Any CPU.ActiveCfg = Release
+		{8B38D7AB-9F4D-467D-BBEC-91BDE7807E0B}.Release|x64.ActiveCfg = Release
+		{8B38D7AB-9F4D-467D-BBEC-91BDE7807E0B}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
