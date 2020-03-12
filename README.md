@@ -1,3 +1,20 @@
+# DS INGESTATOR
+
+Este proyecto viene de los ejemplos para windows de Opentok, se reutiliza el proyecto de multiparty para tal fin. 
+
+Se añade a parte del código necesario, el proyecto de instalación. para poderlo ejecutar.
+
+Para poderlo compilar es necesario:
+ - PC con windows 10
+ - Visual studio 2019
+ 
+ 
+ Se ha probado la instalación en:
+ - PC con windows 10
+ 
+ Es posible encontrar problemas al instalarlo en pc corporativos por motivos de seguridad.
+
+------------------------------------------------------
 # OpenTok Windows SDK Samples
 
  This repository provides sample applications for you to better understand the features of
