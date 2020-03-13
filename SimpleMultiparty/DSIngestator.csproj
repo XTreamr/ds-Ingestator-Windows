@@ -18,6 +18,21 @@
     </NuGetPackageImportStamp>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -89,13 +104,41 @@
   <PropertyGroup>
     <ApplicationIcon>favicon_wOG_icon.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>true</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <StartupObject>DSIngestator.App</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>AA7BCEF991E9BAEC4BC404F33372A1C7561B351A</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>DSIngestator_2_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>DSIngestator_2_TemporaryKey.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="OpenTokNET, Version=2.16.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\OpenTok.Client.2.16.3\lib\net40-client\OpenTokNET.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="OpenTokNET, Version=2.16.5.0, Culture=neutral, PublicKeyToken=446993dbb1ae17c2, processorArchitecture=MSIL">
+      <HintPath>packages\OpenTok.Client.2.16.5\lib\net40-client\OpenTokNET.dll</HintPath>
     </Reference>
     <Reference Include="RestSharp, Version=106.0.0.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
       <HintPath>packages\RestSharp.106.10.1\lib\net452\RestSharp.dll</HintPath>
@@ -116,9 +159,8 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="WPFVideoRenderer, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\OpenTok.Client.2.16.3\lib\net40-client\WPFVideoRenderer.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="WPFVideoRenderer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=446993dbb1ae17c2, processorArchitecture=MSIL">
+      <HintPath>packages\OpenTok.Client.2.16.5\lib\net40-client\WPFVideoRenderer.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -158,7 +200,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="DSIngestator_2_TemporaryKey.pfx" />
     <None Include="packages.config" />
+    <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -174,14 +218,27 @@
   <ItemGroup>
     <Resource Include="favicon_wOG_icon.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.5.2 %28x86 y x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('packages\OpenTok.Client.2.16.3\build\OpenTok.Client.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\OpenTok.Client.2.16.3\build\OpenTok.Client.targets'))" />
+    <Error Condition="!Exists('packages\OpenTok.Client.2.16.5\build\OpenTok.Client.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\OpenTok.Client.2.16.5\build\OpenTok.Client.targets'))" />
   </Target>
   <Import Project="packages\OpenTok.Client.2.16.3\build\OpenTok.Client.targets" Condition="Exists('packages\OpenTok.Client.2.16.3\build\OpenTok.Client.targets')" />
+  <Import Project="packages\OpenTok.Client.2.16.5\build\OpenTok.Client.targets" Condition="Exists('packages\OpenTok.Client.2.16.5\build\OpenTok.Client.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
