@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DSIngestator"
         xmlns:OpenTok="clr-namespace:OpenTok;assembly=WPFVideoRenderer" x:Class="DSIngestator.MainWindow"
         mc:Ignorable="d"
-        Title="DSIngestator" Height="445" Width="525" MinWidth="320" MinHeight="240">
+        Title="DSIngestator" Height="445" Width="553.254" MinWidth="320" MinHeight="240">
     <Grid>
         <UniformGrid x:Name="SubscriberGrid" Rows="1" Columns="0"/>
         <OpenTok:VideoRenderer x:Name="PublisherVideo_1" HorizontalAlignment="Right" Height="114" VerticalAlignment="Bottom" Width="184" Margin="0,0,10,259" BorderBrush="#FF5B1919" BorderThickness="1" >
@@ -18,21 +18,28 @@
                 </ImageBrush>
             </OpenTok:VideoRenderer.Background>
         </OpenTok:VideoRenderer>
-        <Grid HorizontalAlignment="Left" Height="147" VerticalAlignment="Top" Width="308" Margin="10,201,0,0">
+        <Grid x:Name="SesionGrid" HorizontalAlignment="Left" Height="203" VerticalAlignment="Top" Width="325" Margin="10,201,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="104*"/>
                 <ColumnDefinition Width="149*"/>
             </Grid.ColumnDefinitions>
-            <Button x:Name="ConnectDisconnectButton" Content="Conectar" HorizontalAlignment="Left" Margin="10,10,0,104" Width="132" Click="Connect_Click" Grid.ColumnSpan="2"/>
-            <Button x:Name="AddPublisherButton" Content="Nuevo publiser" HorizontalAlignment="Left" Margin="10,50,0,61" Width="107" Click="Publish_Click"/>
-            <ComboBox x:Name="WebcamSelector" HorizontalAlignment="Right" Margin="0,50,10,0" VerticalAlignment="Top" Width="161" Grid.Column="1" Height="36"/>
+            <Button x:Name="ConnectDisconnectButton" Content="Conectar" HorizontalAlignment="Left" Margin="10,10,0,0" Width="137" Click="Connect_Click" Grid.ColumnSpan="2" Height="28" VerticalAlignment="Top"/>
+            <Button x:Name="AddPublisherButton" Content="Nuevo publiser" HorizontalAlignment="Left" Margin="10,50,0,0" Width="94" Click="Publish_Click" Height="26" VerticalAlignment="Top"/>
+            <ComboBox x:Name="WebcamSelector" HorizontalAlignment="Right" Margin="0,50,57,0" VerticalAlignment="Top" Width="152" Height="26" Grid.ColumnSpan="2"/>
             <ComboBox x:Name="EnvSelector" HorizontalAlignment="Left" Margin="107,-144,0,0" VerticalAlignment="Top" Width="191" RenderTransformOrigin="0.742,0.364" Height="30" Grid.ColumnSpan="2"/>
             <Label Content="Entorno" HorizontalAlignment="Left" Margin="10,-144,0,0" VerticalAlignment="Top" Width="63" FontWeight="Bold"/>
             <Label Content="ID SESION" HorizontalAlignment="Left" Margin="10,-98,0,0" VerticalAlignment="Top" Width="75" FontWeight="Bold"/>
             <TextBox x:Name="IdTextBox" HorizontalAlignment="Left" Height="26" Margin="107,-98,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="191" Grid.ColumnSpan="2" FontSize="16"/>
-            <Button x:Name="SessionButton" Content="Obtener sesión" HorizontalAlignment="Left" Margin="10,-54,0,168" Width="107" Click="Session_Click"/>
-            <Label x:Name="StatusText" Content="Seleccione entorno y añada id sesión" HorizontalAlignment="Left" Margin="10,-199,-190,0" VerticalAlignment="Top" Width="488" Height="40" Grid.ColumnSpan="2" FontWeight="Bold" FontSize="18"/>
-            <Button x:Name="ConnectDisconnectNoUDPButton" Content="Conectar sin UDP" HorizontalAlignment="Left" Margin="35,10,0,104" Width="136" Click="Connect_NOUDP_Click" Grid.Column="1"/>
+            <Button x:Name="SessionButton" Content="Obtener sesión" HorizontalAlignment="Left" Margin="10,-54,0,0" Width="115" Click="Session_Click" Height="39" VerticalAlignment="Top"/>
+            <Label x:Name="StatusText" Content="Seleccione entorno y añada id sesión" Margin="-1,-198,-151,0" VerticalAlignment="Top" Height="34" Grid.ColumnSpan="2" FontWeight="Bold" FontSize="16" HorizontalAlignment="Left" Width="477"/>
+            <Button x:Name="ConnectDisconnectNoUDPButton" Content="Conectar sin UDP" HorizontalAlignment="Left" Margin="35,10,0,0" Width="136" Click="Connect_NOUDP_Click" Grid.Column="1" Height="28" VerticalAlignment="Top"/>
+            <ComboBox x:Name="QualitySelector" HorizontalAlignment="Left" Margin="10,81,0,0" VerticalAlignment="Top" Width="161" RenderTransformOrigin="0.742,0.364" Height="26" Grid.Column="1"/>
+            <Button x:Name="RefresCameras" Content="⟳" Margin="139,50,0,0" Width="32" Click="Refresh_Click" Height="26" VerticalAlignment="Top" Grid.Column="1" FontSize="16" FontWeight="Bold" HorizontalAlignment="Left"/>
+            <StackPanel x:Name="PanelQuality" HorizontalAlignment="Left" Height="58" Margin="10,81,0,0" VerticalAlignment="Top" Width="114">
+                <RadioButton x:Name="RadioButtonQuality" Content="General quality" Margin="0,5,-1,5" FontWeight="Bold" Checked="RadioButton_Checked" Height="22" IsChecked="True" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <RadioButton x:Name="RadioButtonAdvanceQuality" Content="Detail quality" Margin="0,5,9,5" VerticalAlignment="Top" FontWeight="Bold" Checked="RadioButton_Checked" Height="26"/>
+            </StackPanel>
+            <ComboBox x:Name="AdvanceQualitySelector" HorizontalAlignment="Left" Margin="10,113,0,0" VerticalAlignment="Top" Width="161" RenderTransformOrigin="0.742,0.364" Height="26" Grid.Column="1"/>
         </Grid>
         <OpenTok:VideoRenderer x:Name="PublisherVideo_2" HorizontalAlignment="Right" Height="114" VerticalAlignment="Bottom" Width="184" Margin="0,0,10,135" BorderBrush="#FF5B1919" BorderThickness="1" >
             <OpenTok:VideoRenderer.Effect>

@@ -27,11 +27,13 @@ namespace DSIngestator
 
         Bitmap EmptyBitmap = CreateEmptyBitmap(114, 184);
         IList<VideoCapturer.VideoDevice> devices;
+        List<VideoCapturer.VideoFormat> CurrentCameraFormats = new List<VideoCapturer.VideoFormat>();
+
+
         List<Publisher> Publisers = new List<Publisher>();
         List<Publisher> UDPPublisers = new List<Publisher>();
 
         List<VideoCapturer> Capturers = new List<VideoCapturer>();
-
         int ActualPublisherAvailable = 0;
         bool Disconnect = false;
 
@@ -52,14 +54,22 @@ namespace DSIngestator
 
         private void InitViews()
         {
+            QualitySelector.Items.Add("MININUM");
+            QualitySelector.Items.Add("MEDIUM");
+            QualitySelector.Items.Add("HIGH");
+            QualitySelector.SelectedIndex = 2;
+
             EnvSelector.Items.Add("PRO");
             EnvSelector.Items.Add("PRE");
             EnvSelector.Items.Add("DEV");
             EnvSelector.SelectedIndex = 1;
-            IdTextBox.Text = "089ef02";
+
+            IdTextBox.Text = "db06208";
             ConnectDisconnectButton.IsEnabled = false;
             ConnectDisconnectNoUDPButton.IsEnabled = false;
             SetDefaultsImages();
+            //TODO añadir el callback y recoger los tipos de video para ponerlo en el otro combo
+            WebcamSelector.DropDownClosed += ComboBox_SelectWebcam;
             StatusText.Content = "Introduzca Id y dele a obtener sesión";
         }
 
@@ -73,7 +83,7 @@ namespace DSIngestator
         private void FillSelectorWithWebCams()
         {
             devices = VideoCapturer.EnumerateDevices();
-
+            WebcamSelector.Items.Clear();
             foreach (VideoCapturer.VideoDevice device in devices)
             {
                 WebcamSelector.Items.Add(device.Name);
@@ -81,6 +91,7 @@ namespace DSIngestator
 
             }
             WebcamSelector.SelectedIndex = 0;
+            GetCameraQualities();
         }
 
         private async void Session_Click(object sender, RoutedEventArgs e)
@@ -121,13 +132,52 @@ namespace DSIngestator
             StatusText.Content = Status;
         }
 
+        private void ComboBox_SelectWebcam(object sender, EventArgs e)
+        {
+            GetCameraQualities();
+        }
+
+        private void GetCameraQualities()
+        {
+            int position = WebcamSelector.SelectedIndex;
+            VideoCapturer.VideoDevice device = devices[position];
+            AdvanceQualitySelector.Items.Clear();
+            CurrentCameraFormats.Clear();
+            foreach (var format in device.ListFormats())
+            {
+                AdvanceQualitySelector.Items.Add(FormatToString(format));
+                CurrentCameraFormats.Add(format);
+            }
+            AdvanceQualitySelector.SelectedIndex = 1;
+        }
+
+        private String FormatToString(VideoCapturer.VideoFormat format)
+        {
+            return format.Width + "x" + format.Height + " @" + format.Fps + "fps " + format.PixelFormat.ToString();
+        }
+
         private VideoCapturer GetCapturer(int position)
         {
             if (Capturers[position] == null)
             {
-                Capturers[position] = devices[position].CreateVideoCapturer(VideoCapturer.Resolution.High);
+                if (RadioButtonQuality.IsChecked == true)
+                {
+                    SetStatus("Ingestando " + devices[position].Name+" with quality:"+ (VideoCapturer.Resolution)QualitySelector.SelectedIndex);
+                    Capturers[position] = devices[position].CreateVideoCapturer((VideoCapturer.Resolution)QualitySelector.SelectedIndex);
+                }
+                if (RadioButtonAdvanceQuality.IsChecked == true)
+                {
+                    SetStatus("Ingestando " + devices[position].Name + " with ADV Quality:" + FormatToString(CurrentCameraFormats[AdvanceQualitySelector.SelectedIndex]));
+                    Capturers[position] = devices[position].CreateVideoCapturer(CurrentCameraFormats[AdvanceQualitySelector.SelectedIndex]);
+                }
+
             }
             return Capturers[position];
+        }
+
+        private void Refresh_Click(object sender, RoutedEventArgs e) 
+        {
+            FillSelectorWithWebCams();
         }
 
         private void Publish_Click(object sender, RoutedEventArgs e)
@@ -136,11 +186,11 @@ namespace DSIngestator
             var Capturer = GetCapturer(position);
             if (UDPSession != null)
             {
-                var PublisherUDP = new Publisher(Context.Instance, capturer: Capturer, name: "CAMERA");
+                var PublisherUDP = new Publisher(Context.Instance, capturer: Capturer, name: "CAMERA",hasVideoTrack:true, hasAudioTrack:true );
                 UDPPublisers.Add(PublisherUDP);
                 UDPSession.Publish(PublisherUDP);
             }
-            var Publisher = new Publisher(Context.Instance, renderer: GetNextPublisherView(), capturer: Capturer, name: "CAMERA");
+            var Publisher = new Publisher(Context.Instance, renderer: GetNextPublisherView(), capturer: Capturer, name: "CAMERA", hasVideoTrack: true, hasAudioTrack: true);
             Publisers.Add(Publisher);
             Session.Publish(Publisher);
         }
@@ -252,10 +302,12 @@ namespace DSIngestator
         {
             if (Disconnect)
             {
+                SetStatus("Desconectando a la sesión, UDP:"+withUDP);
                 DisconnectProcess(withUDP);
             }
             else
             {
+                SetStatus("Conectando a la sesión, UDP:" + withUDP);
                 ConnectProcess(withUDP);
             }
             Disconnect = !Disconnect;
@@ -329,5 +381,10 @@ namespace DSIngestator
             return bmp;
         }
         #endregion
+
+        private void RadioButton_Checked(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
