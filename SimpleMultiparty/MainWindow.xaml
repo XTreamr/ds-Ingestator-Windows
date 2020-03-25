@@ -6,10 +6,10 @@
         xmlns:local="clr-namespace:DSIngestator"
         xmlns:OpenTok="clr-namespace:OpenTok;assembly=WPFVideoRenderer" x:Class="DSIngestator.MainWindow"
         mc:Ignorable="d"
-        Title="DSIngestator" Height="445" Width="553.254" MinWidth="320" MinHeight="240">
+        Title="DSIngestator" Height="445" Width="777.52" MinWidth="320" MinHeight="240">
     <Grid>
         <UniformGrid x:Name="SubscriberGrid" Rows="1" Columns="0"/>
-        <OpenTok:VideoRenderer x:Name="PublisherVideo_1" HorizontalAlignment="Right" Height="114" VerticalAlignment="Bottom" Width="184" Margin="0,0,10,259" BorderBrush="#FF5B1919" BorderThickness="1" >
+        <OpenTok:VideoRenderer x:Name="PublisherVideo_1" HorizontalAlignment="Right" Height="114" VerticalAlignment="Bottom" Width="184" Margin="0,0,10,265" BorderBrush="#FF5B1919" BorderThickness="1" >
             <OpenTok:VideoRenderer.Effect>
                 <DropShadowEffect Opacity="0.6"/>
             </OpenTok:VideoRenderer.Effect>
@@ -58,5 +58,29 @@
             </OpenTok:VideoRenderer.Background>
         </OpenTok:VideoRenderer>
         <TextBlock HorizontalAlignment="Left" Height="4" Margin="577,96,-63,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Width="3"/>
+        <OpenTok:VideoRenderer x:Name="UDPPublisherVideo_1" HorizontalAlignment="Right" Height="114" VerticalAlignment="Bottom" Width="184" Margin="0,0,212,265" BorderBrush="#FF5B1919" BorderThickness="1" >
+            <OpenTok:VideoRenderer.Effect>
+                <DropShadowEffect Opacity="0.6"/>
+            </OpenTok:VideoRenderer.Effect>
+            <OpenTok:VideoRenderer.Background>
+                <ImageBrush Stretch="UniformToFill"/>
+            </OpenTok:VideoRenderer.Background>
+        </OpenTok:VideoRenderer>
+        <OpenTok:VideoRenderer x:Name="UDPPublisherVideo_2" HorizontalAlignment="Right" Height="114" VerticalAlignment="Bottom" Width="184" Margin="0,0,212,135" BorderBrush="#FF5B1919" BorderThickness="1" >
+            <OpenTok:VideoRenderer.Effect>
+                <DropShadowEffect Opacity="0.6"/>
+            </OpenTok:VideoRenderer.Effect>
+            <OpenTok:VideoRenderer.Background>
+                <ImageBrush Stretch="UniformToFill"/>
+            </OpenTok:VideoRenderer.Background>
+        </OpenTok:VideoRenderer>
+        <OpenTok:VideoRenderer x:Name="UDPPublisherVideo_3" HorizontalAlignment="Right" Height="114" VerticalAlignment="Bottom" Width="184" Margin="0,0,212,10" BorderBrush="#FF5B1919" BorderThickness="1" >
+            <OpenTok:VideoRenderer.Effect>
+                <DropShadowEffect Opacity="0.6"/>
+            </OpenTok:VideoRenderer.Effect>
+            <OpenTok:VideoRenderer.Background>
+                <ImageBrush Stretch="UniformToFill"/>
+            </OpenTok:VideoRenderer.Background>
+        </OpenTok:VideoRenderer>
     </Grid>
 </Window>

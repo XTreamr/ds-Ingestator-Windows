@@ -62,9 +62,9 @@ namespace DSIngestator
             EnvSelector.Items.Add("PRO");
             EnvSelector.Items.Add("PRE");
             EnvSelector.Items.Add("DEV");
-            EnvSelector.SelectedIndex = 1;
+            EnvSelector.SelectedIndex = 2;
 
-            IdTextBox.Text = "db06208";
+            IdTextBox.Text = "470273d";
             ConnectDisconnectButton.IsEnabled = false;
             ConnectDisconnectNoUDPButton.IsEnabled = false;
             SetDefaultsImages();
@@ -78,7 +78,11 @@ namespace DSIngestator
             PublisherVideo_1.RenderFrame(VideoFrame.CreateYuv420pFrameFromBitmap(EmptyBitmap));
             PublisherVideo_2.RenderFrame(VideoFrame.CreateYuv420pFrameFromBitmap(EmptyBitmap));
             PublisherVideo_3.RenderFrame(VideoFrame.CreateYuv420pFrameFromBitmap(EmptyBitmap));
+            UDPPublisherVideo_1.RenderFrame(VideoFrame.CreateYuv420pFrameFromBitmap(EmptyBitmap));
+            UDPPublisherVideo_2.RenderFrame(VideoFrame.CreateYuv420pFrameFromBitmap(EmptyBitmap));
+            UDPPublisherVideo_3.RenderFrame(VideoFrame.CreateYuv420pFrameFromBitmap(EmptyBitmap));
         }
+
 
         private void FillSelectorWithWebCams()
         {
@@ -145,8 +149,10 @@ namespace DSIngestator
             CurrentCameraFormats.Clear();
             foreach (var format in device.ListFormats())
             {
-                AdvanceQualitySelector.Items.Add(FormatToString(format));
-                CurrentCameraFormats.Add(format);
+                if ((format.Fps == 30)&&(format.Height == 720)) { 
+                   AdvanceQualitySelector.Items.Add(FormatToString(format));
+                   CurrentCameraFormats.Add(format);
+                }
             }
             AdvanceQualitySelector.SelectedIndex = 1;
         }
@@ -160,18 +166,18 @@ namespace DSIngestator
         {
             if (Capturers[position] == null)
             {
-                if (RadioButtonQuality.IsChecked == true)
-                {
-                    SetStatus("Ingestando " + devices[position].Name+" with quality:"+ (VideoCapturer.Resolution)QualitySelector.SelectedIndex);
-                    Capturers[position] = devices[position].CreateVideoCapturer((VideoCapturer.Resolution)QualitySelector.SelectedIndex);
-                }
-                if (RadioButtonAdvanceQuality.IsChecked == true)
-                {
-                    SetStatus("Ingestando " + devices[position].Name + " with ADV Quality:" + FormatToString(CurrentCameraFormats[AdvanceQualitySelector.SelectedIndex]));
-                    Capturers[position] = devices[position].CreateVideoCapturer(CurrentCameraFormats[AdvanceQualitySelector.SelectedIndex]);
-                }
-
+            if (RadioButtonQuality.IsChecked == true)
+            {
+                SetStatus("Ingestando " + devices[position].Name+" with quality:"+ (VideoCapturer.Resolution)QualitySelector.SelectedIndex);
+                Capturers[position] = devices[position].CreateVideoCapturer((VideoCapturer.Resolution)QualitySelector.SelectedIndex);
+            }else
+            if (RadioButtonAdvanceQuality.IsChecked == true)
+            {
+                SetStatus("Ingestando " + devices[position].Name + " with ADV Quality:" + FormatToString(CurrentCameraFormats[AdvanceQualitySelector.SelectedIndex]));
+                Capturers[position]= devices[position].CreateVideoCapturer(CurrentCameraFormats[AdvanceQualitySelector.SelectedIndex]);
             }
+
+           }
             return Capturers[position];
         }
 
@@ -184,15 +190,18 @@ namespace DSIngestator
         {
             int position = WebcamSelector.SelectedIndex;
             var Capturer = GetCapturer(position);
-            if (UDPSession != null)
+           // var VideoRenderer = GetNextPublisherView();
+
+            var Publisher = new Publisher(Context.Instance, capturer: Capturer, renderer: GetNextPublisherView(), name: "CAMERA", hasVideoTrack: true, hasAudioTrack: true);
+            Publisers.Add(Publisher);
+            Session.Publish(Publisher);
+
+            if (false)
             {
-                var PublisherUDP = new Publisher(Context.Instance, capturer: Capturer, name: "CAMERA",hasVideoTrack:true, hasAudioTrack:true );
+                var PublisherUDP = new Publisher(Context.Instance, name: "CAMERA", hasVideoTrack: true, hasAudioTrack: true);
                 UDPPublisers.Add(PublisherUDP);
                 UDPSession.Publish(PublisherUDP);
             }
-            var Publisher = new Publisher(Context.Instance, renderer: GetNextPublisherView(), capturer: Capturer, name: "CAMERA", hasVideoTrack: true, hasAudioTrack: true);
-            Publisers.Add(Publisher);
-            Session.Publish(Publisher);
         }
 
         private VideoRenderer GetNextPublisherView()
@@ -206,6 +215,19 @@ namespace DSIngestator
                     return PublisherVideo_2;
                 default:
                     return PublisherVideo_3;
+            }
+        }
+
+        private VideoRenderer GetNextUDPPublisherView()
+        {
+            switch (ActualPublisherAvailable)
+            {
+                case 1:
+                    return UDPPublisherVideo_1;
+                case 2:
+                    return UDPPublisherVideo_2;
+                default:
+                    return UDPPublisherVideo_3;
             }
         }
 
@@ -258,6 +280,12 @@ namespace DSIngestator
             Trace.WriteLine("Session disconnected");
             AddPublisherButton.IsEnabled = false;
             SubscriberGrid.Children.Clear();
+        }
+
+        private void Session_Signal(object sender, Session.SignalEventArgs e)
+        {
+            Trace.WriteLine("SESSION SIGNAL:" + e.Data);
+
         }
 
         private void Session_Error(object sender, Session.ErrorEventArgs e)
@@ -321,6 +349,7 @@ namespace DSIngestator
             Session.Connected += Session_Connected;
             Session.Disconnected += Session_Disconnected;
             Session.Error += Session_Error;
+            Session.Signal += Session_Signal;
             if ((ReceivedSession.tokboxUDP != null) && (withUDP == true))
             {
                 UDPSession = new Session(Context.Instance, ReceivedSession.tokboxUDP.apiKey, ReceivedSession.tokboxUDP.sessionId);

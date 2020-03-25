@@ -21,6 +21,12 @@ namespace HttpRequest
                 {
                     Trace.WriteLine("--->>>" + response.Content);
                     session = JsonConvert.DeserializeObject<RequestSession>(response.Content);
+                    if (session.tokboxUDP != null) {
+                        Trace.WriteLine("->>-" + response.Content);
+                        Trace.WriteLine("--------------------------------");
+                        Trace.WriteLine("&m=1&tokenUdp="+ session.tokboxUDP.token+ "&sessionIdUdp="+session.tokboxUDP.sessionId+"&apiKeyUdp="+session.tokboxUDP.apiKey);
+                        Trace.WriteLine("--------------------------------");
+                    }
                 }
                 else
                 {
